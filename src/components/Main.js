@@ -6,11 +6,10 @@ import {microphone} from '../audio/microphone'
 import {audioSource} from '../audio/audio-source'
 import {mixer} from '../audio/mixer'
 
-let recording
 let ctx
 
 const config = {
-  url: "/assets/img/instrumentals/hendrix.mp3",
+  url: '/assets/instrumentals/hendrix.mp3'
 }
 
 const mixerConfig = {value: 50, max: 100}
@@ -76,10 +75,10 @@ class AppComponent extends React.Component {
     }
 
     component = (
-      <div className="index">
+      <div className='index'>
         <button onClick={this.togglePlaying}>{audioSourceButtonText}</button>
         <button onClick={this.toggleRecord}>{buttonText}</button>
-        <input type="range" min="0" max="100" value={this.state.mix} onChange={this.handleMixChange}/>
+        <input type='range' min='0' max='100' value={this.state.mix} onChange={this.handleMixChange}/>
       </div>
     );
 

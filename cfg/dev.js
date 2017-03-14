@@ -20,7 +20,7 @@ let config = Object.assign({}, baseConfig, {
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new CopyWebpackPlugin([
-        {from: 'src/images', to: 'img', force: true}
+        {from: 'src/instrumentals', to: 'instrumentals', force: true}
     ]),
     new webpack.NoErrorsPlugin(),
     new BowerWebpackPlugin({
