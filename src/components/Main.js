@@ -32,15 +32,12 @@ class AppComponent extends React.Component {
   componentDidMount() {
     Promise.all([microphone(ctx), audioSource(ctx, config)])
       .then((values) => {
-        console.log(values)
         this.mic = values[0]
         this.audioSource = values[1]
         this.mixer = mixer(ctx, mixerConfig, this.mic.node, this.audioSource.node)
 
         this.mixer.node.connect(ctx.destination)
         this.setState({loading: false})
-
-        console.log(this)
       })
   }
   togglePlaying() {
@@ -64,7 +61,6 @@ class AppComponent extends React.Component {
     }
 
     this.mic.startRecording()
-
     this.setState({recording: true})
   }
   render() {
