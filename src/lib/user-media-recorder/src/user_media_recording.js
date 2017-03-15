@@ -17,6 +17,7 @@ function UserMediaRecording(uuid, stream, audioContext, input, worker, config) {
   this.type = "";
 
   this._onAudioProcess = this._onAudioProcess.bind(this);
+  this.worker.addEventListener("message", this._handleWorkerMessage.bind(this));
 }
 
 UserMediaRecording.prototype.startRecording = function() {
@@ -31,7 +32,6 @@ UserMediaRecording.prototype.startRecording = function() {
   scriptProcessor.connect(this.output);
 
   scriptProcessor.addEventListener("audioprocess", this._onAudioProcess);
-  this.worker.addEventListener("message", this._handleWorkerMessage.bind(this));
 
   this.worker.postMessage({
     command: "init",
@@ -95,10 +95,9 @@ UserMediaRecording.prototype._handleWorkerMessage = function(evt) {
     this.appendToBuffer(data.buffer);
     break;
   case "end":
-    this.appendToBuffer(data.buffer);
     var view;
     try {
-      view = new DataView(this.buffer);
+      view = new DataView(data.buffer);
       var blob = new Blob([view], {type: this.type});
       try {
         this.endRecordingCallback(blob);

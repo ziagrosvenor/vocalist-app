@@ -76,7 +76,6 @@ this.addEventListener("message", function(evt) {
       var bufferL = mergeBuffers(job.buffersL, job.length);
       var bufferR = mergeBuffers(job.buffersR, job.length);
       var pcmBuffer = interleave(bufferL, bufferR);
-      ws.send(pcmBuffer)
       break;
     case "end":
       var job = jobs[uuid];
@@ -115,6 +114,7 @@ this.addEventListener("message", function(evt) {
         view.setInt16(index, pcmBuffer[i] * (0x7FFF * volume), true);
         index += 2;
       }
+
       this.postMessage({command: "end", uuid: uuid, buffer: wavBuffer});
       delete jobs[uuid];
       break;
