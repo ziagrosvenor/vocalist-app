@@ -5,6 +5,13 @@ import React from 'react';
 import {microphone} from '../audio/microphone'
 import {audioSource} from '../audio/audio-source'
 import {mixer} from '../audio/mixer'
+require("react-tap-event-plugin")()
+
+import RaisedButton from 'material-ui/RaisedButton';
+import Slider from 'material-ui/Slider';
+import {Mic} from "./Microphone.js"
+import {NavBar} from "./NavBar.js"
+import {BottomNav} from "./BottomNav"
 
 let ctx
 
@@ -49,9 +56,9 @@ class AppComponent extends React.Component {
     this.audioSource.play()
     this.setState({playing: true})
   }
-  handleMixChange(e) {
-   this.setState({mix: e.target.value})
-   this.mixer.updateMix(e.target.value)
+  handleMixChange(value) {
+   this.setState({mix: value})
+   this.mixer.updateMix(value)
   }
   toggleRecord() {
     if (this.state.recording) {
@@ -64,7 +71,7 @@ class AppComponent extends React.Component {
   }
   render() {
     const buttonText = this.state.recording ? 'Stop recording' : 'Record'
-    const audioSourceButtonText = this.state.playing ? 'Stop the track ' : 'Play the track'
+    const audioSourceButtonText = this.state.playing ? 'Stop' : 'Loop'
 
     let component
 
@@ -74,11 +81,30 @@ class AppComponent extends React.Component {
       )
     }
 
+    const playButton = (
+      <RaisedButton
+        onTouchTap={this.togglePlaying}
+        label={audioSourceButtonText}
+        primary={true}
+      />
+    )
+
     component = (
-      <div className='index'>
-        <button onClick={this.togglePlaying}>{audioSourceButtonText}</button>
-        <button onClick={this.toggleRecord}>{buttonText}</button>
-        <input type='range' min='0' max='100' value={this.state.mix} onChange={this.handleMixChange}/>
+      <div className='wrapper'>
+        <NavBar/>
+        <Mic toggleRecord={this.toggleRecord}/>
+        <BottomNav
+          actionButton={playButton}
+        />
+        <div style={{padding: "0 1rem"}}>
+          <h3 className="title">Microphone / Track Volume Mix</h3>
+          <Slider
+            min={0}
+            max={100}
+            value={this.state.mix}
+            onChange={(e, v) => this.handleMixChange(v)}
+          />
+        </div>
       </div>
     );
 
