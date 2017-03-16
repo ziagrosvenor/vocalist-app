@@ -24,10 +24,8 @@ export const microphone = (ctx) => {
       return {
         node: output,
         startRecording() { recorder.startRecording() },
-        stopRecording() {
-          recorder.stopRecording(function(blob) {
-            window.open(URL.createObjectURL(blob));
-          })
+        stopRecording(callback) {
+          recorder.stopRecording(callback)
         }
       }
     })
