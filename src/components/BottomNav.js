@@ -22,9 +22,6 @@ export class BottomNav extends React.Component {
     return (
       <Toolbar style={{bottom: 0, position: 'fixed', width: '100vw'}}>
         <ToolbarGroup firstChild={true}>
-          <DropDownMenu value={this.state.value} onChange={this.handleChange}>
-            <MenuItem value={1} primaryText="Hendrix" />
-          </DropDownMenu>
         </ToolbarGroup>
         <ToolbarGroup>
           {this.props.actionButton}
