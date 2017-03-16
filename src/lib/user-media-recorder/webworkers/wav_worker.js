@@ -76,6 +76,16 @@ this.addEventListener("message", function(evt) {
       var job = jobs[uuid];
       var pcmBuffer = mergeBuffers(job.buffersL, job.length);
 
+
+      var acceptableVolume = false
+
+      for (var i = 0; i < pcmBuffer.length; i++) {
+        var absValue = Math.abs(pcmBuffer[i]);
+        if (absValue >= 0.5) {
+          acceptableVolume = true
+        }
+      }
+
       var wavBuffer = new ArrayBuffer(44 + pcmBuffer.length * 2);
       var view = new DataView(wavBuffer);
 
@@ -108,7 +118,12 @@ this.addEventListener("message", function(evt) {
         index += 2;
       }
 
-      this.postMessage({command: "end", uuid: uuid, buffer: wavBuffer});
+      this.postMessage({
+        command: "end",
+        uuid: uuid,
+        buffer: wavBuffer,
+        acceptableVolume: acceptableVolume
+      });
       delete jobs[uuid];
       break;
   }
