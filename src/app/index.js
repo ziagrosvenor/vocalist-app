@@ -2,27 +2,37 @@ require('normalize.css/normalize.css');
 require('styles/App.scss');
 
 import React from 'react';
-import {microphone} from '../audio/microphone'
-import {audioSource} from '../audio/audio-source'
-import {mixer} from '../audio/mixer'
-
-import {saveWav} from "../lib/aws"
-
-import RaisedButton from 'material-ui/RaisedButton';
-import CircularProgress from 'material-ui/CircularProgress';
 import Snackbar from 'material-ui/Snackbar';
-import Slider from 'material-ui/Slider';
-import {Mic} from "./Microphone.js"
-import {NavBar} from "./NavBar.js"
-import {BottomNav} from "./BottomNav"
-import {ViewRecording} from "./ViewRecording"
-import {copyTextToClipboard} from "../lib/copy-to-clipboard"
+
+import { themeProvider } from '../packages/theme/theme-provider'
+
+import {NavBar} from '../packages/components/nav/NavBar'
+import {BottomNav} from '../packages/components/nav/BottomNav'
+import {Spinner} from '../packages/components/spinner'
+
+import {ManageTakes} from './pages/manage-takes'
+import {MicrophoneBooth} from './pages/microphone-booth'
+
+import {microphone} from '../packages/audio/microphone'
+import {audioSource} from '../packages/audio/audio-source'
+import {mixer} from '../packages/audio/mixer'
+import {saveWav} from '../packages/lib/aws'
+
+import {copyTextToClipboard} from '../packages/lib/copy-to-clipboard'
 
 let ctx
 
-
 const config = {
   url: '/assets/instrumentals/backing.ogg'
+}
+
+const snackBarOptionsMap = {
+  LOW_GAIN: {
+    message: 'Please sing louder or move closer to the microphone'
+  },
+  PEAKED_GAIN: {
+    message: 'Please move further away from the microphone'
+  }
 }
 
 const mixerConfig = {value: 0, max: 100}
@@ -30,7 +40,13 @@ const mixerConfig = {value: 0, max: 100}
 class AppComponent extends React.Component {
   constructor(props) {
     super(props)
-    ctx = new AudioContext({latencyHint: 0.01})
+
+    try {
+      ctx = new AudioContext({latencyHint: 0.01})
+    } catch (e) {
+      ctx = new AudioContext()
+    }
+
     this.togglePlaying = this.togglePlaying.bind(this)
     this.handleMixChange = this.handleMixChange.bind(this)
     this.state = {
@@ -39,7 +55,7 @@ class AppComponent extends React.Component {
       playing: false,
       uploading: false,
       snackBarOpen: false,
-      mix: mixerConfig.value,
+      microphoneMix: mixerConfig.value,
       takes: [],
       selectedTake: 0
     }
@@ -74,7 +90,7 @@ class AppComponent extends React.Component {
     this.audioSource.play(startTime)
   }
   handleMixChange(value) {
-   this.setState({mix: value})
+   this.setState({microphoneMix: value})
    this.mixer.updateMix(value)
   }
   startRecording = () => {
@@ -94,18 +110,14 @@ class AppComponent extends React.Component {
     this.mic.stopRecording((data) => {
       let snackBarOptions
 
-      if (data.acceptableVolume) {
-        snackBarOptions = {
-          message: "Success",
-          action: "Manage take",
-          onActionTouchTap: this.handleRecordingComplete
-        }
-      } else {
-        snackBarOptions = {
-          message: "Please sing louder or move closer to the microphone",
-        }
-        this.setState({snackBarOptions, snackBarOpen: true})
-        return
+      if (data.gainLevel === "LOW_GAIN" || data.gainLevel === "PEAKED_GAIN") {
+        return this.setState({snackBarOpen: true, snackBarOptions: snackBarOptionsMap[data.gainLevel]})
+      }
+
+      const successSnackBar = {
+        message: "Success",
+        action: "Manage take",
+        onActionTouchTap: this.handleRecordingComplete
       }
 
       const view = new DataView(data.buffer);
@@ -115,15 +127,17 @@ class AppComponent extends React.Component {
         blob: blob,
         buffer: data.buffer,
         url: URL.createObjectURL(blob),
-        filename: "my-take" + Date.now() + ".wav"
+        filename: "my-take" + Date.now() + ".wav",
       }
 
-      this.setState({
-        takes: this.state.takes.concat([newTake]),
-        snackBarOpen: true,
-        snackBarOptions
-      })
+      const newTakes = this.state.takes.concat([newTake])
 
+      this.setState({
+        takes: newTakes,
+        snackBarOpen: true,
+        snackBarOptions: successSnackBar,
+        selectedTake: newTakes.length - 1
+      })
     })
   }
   selectTake = (id) => {
@@ -179,33 +193,16 @@ class AppComponent extends React.Component {
     let component
 
     if (this.state.loading) {
-      return (
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          height: "100vh",
-          width: "100vw"
-        }}>
-          <CircularProgress size={80} thickness={5} />
-          <h2
-            style={{width: "100%", textAlign: "center", marginTop: "2rem"}}
-            className="title">Loading ...</h2>
-          <Snackbar
-            open={this.state.snackBarOpen}
-            message=""
-            autoHideDuration={8000}
-            {...this.state.snackBarOptions}
-            onRequestClose={this.handleRequestClose}
-          />
-        </div>
-      )
+      <Spinner
+        snackBarOpen={this.state.snackBarOpen}
+        snackBarOptions={this.state.snackBarOptions}
+        handleRequestClose={this.handleRequestClose}
+      />
     }
 
-    if (this.state.route === "manage_takes") {
+    if (this.state.route === 'manage_takes') {
       component = (
-        <ViewRecording
+        <ManageTakes
           takes={this.state.takes}
           selectedTake={this.state.selectedTake}
           selectTake={this.selectTake}
@@ -214,30 +211,19 @@ class AppComponent extends React.Component {
           togglePlaying={this.togglePlaying}
           stopBackingTrack={this.stopBackingTrack}
           uploadProgress={this.state.uploadProgress}
-          backLink={() => this.setState({route: "index"})}
+          backLink={() => this.setState({route: 'index'})}
         />
       )
     } else {
       component = (
-        <div>
-          <Mic
-            stopRecording={this.stopRecording}
-            startRecording={this.startRecording}
-          />
-          <div style={{padding: "0 1rem"}}>
-            <h3 className="title">Microphone monitoring volume, use with headphones</h3>
-            <Slider
-              min={0}
-              max={100}
-              value={this.state.mix}
-              onChange={(e, v) => this.handleMixChange(v)}
-              sliderStyle={{padding: "2rem 0"}}
-            />
-          </div>
-        </div>
-      );
+        <MicrophoneBooth
+          startRecording={this.startRecording}
+          stopRecording={this.stopRecording}
+          microphoneMix={this.state.microphoneMix}
+          onMicrophoneMixChange={this.handleMixChange}
+        />
+      )
     }
-
 
     return (
       <div className='wrapper'>
@@ -259,7 +245,4 @@ class AppComponent extends React.Component {
   }
 }
 
-AppComponent.defaultProps = {
-};
-
-export default AppComponent;
+export const App = themeProvider(AppComponent)
