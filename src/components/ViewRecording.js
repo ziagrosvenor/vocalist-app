@@ -1,8 +1,8 @@
 import React from 'react';
 import "./MediaPlayer.scss"
 import PlayPause from './PlayPause'
-import Wavesurfer from 'react-wavesurfer';
 import RaisedButton from 'material-ui/RaisedButton';
+import LinearProgress from 'material-ui/LinearProgress';
 
 let canvas
 const canvasWidth = 200
@@ -43,7 +43,7 @@ export class ViewRecording extends React.Component {
     this.state = {
       hasSaved: false,
       downloaded: false,
-      isPlaying: false,
+      isPreviewing: false,
       pos: 0
     }
   }
@@ -52,8 +52,23 @@ export class ViewRecording extends React.Component {
     this.setState({hasSaved: true})
     this.props.saveFile(this.props.selectedTake)
   }
-  togglePlaying = () => {
-    this.setState({isPlaying: !this.state.isPlaying})
+  toggleTakeAudio = () => {
+    if (!this.state.isPreviewing)
+      return this.takeAudio.play()
+
+    this.takeAudio.pause()
+    this.takeAudio.currentTime = 0
+  }
+  togglePreviewing = () => {
+
+    this.setState({
+      isPreviewing: !this.state.isPreviewing,
+      pos: 0
+    })
+
+    this.toggleTakeAudio()
+    // this delays the back track to put it in sync with the recording
+    this.props.togglePlaying(0.09616)
   }
 
   handlePosChange = (e) => {
@@ -82,19 +97,32 @@ export class ViewRecording extends React.Component {
 
     const {url, filename} = takes[selectedTake]
 
+    let uploadingProgress
+
+    if (this.props.uploading && this.props.uploadProgress) {
+      uploadingProgress = (
+        <div>
+           <h2 className="title">Uploading</h2>
+           <LinearProgress mode="determinate"
+             value={this.props.uploadProgress.value}
+             min={0}
+             max={this.props.uploadProgress.total}
+           />
+        </div>
+      )
+    }
+
     return (
       <div>
         <div style={{padding: "1rem"}}>
-          <Wavesurfer
-            audioFile={url}
-            pos={this.state.pos}
-            onPosChange={this.handlePosChange}
-            playing={this.state.isPlaying}
-          />
+          <audio
+            ref={(takeAudio) => this.takeAudio = takeAudio}
+            src={url}
+            controls=""/>
           <div className="media-controls">
             <PlayPause
-              togglePlaying={this.togglePlaying}
-              isPlaying={this.state.isPlaying}
+              togglePlaying={this.togglePreviewing}
+              isPlaying={this.state.isPreviewing}
               className="media-control media-control--play-pause"/>
           </div>
           <Playlist
@@ -129,6 +157,7 @@ export class ViewRecording extends React.Component {
             style={buttonStyle}
             onTouchTap={this.props.backLink}
           />
+          {uploadingProgress}
         </div>
       </div>
     )

@@ -19,11 +19,11 @@ function createTrack(ctx, buffer) {
 
   return {
     node: output,
-    play() {
+    play(startTime = 0) {
       this.source = ctx.createBufferSource(); // creates a sound source
       this.source.connect(this.node)
       this.source.buffer = buffer;
-      this.source.start(0)
+      this.source.start(ctx.currentTime + startTime)
     },
     stop() {
       this.source.stop(0)

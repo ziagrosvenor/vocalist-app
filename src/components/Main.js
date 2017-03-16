@@ -16,14 +16,16 @@ import {Mic} from "./Microphone.js"
 import {NavBar} from "./NavBar.js"
 import {BottomNav} from "./BottomNav"
 import {ViewRecording} from "./ViewRecording"
+import {copyTextToClipboard} from "../lib/copy-to-clipboard"
 
 let ctx
 
+
 const config = {
-  url: '/assets/instrumentals/hendrix.mp3'
+  url: '/assets/instrumentals/backing.ogg'
 }
 
-const mixerConfig = {value: 100, max: 100}
+const mixerConfig = {value: 0, max: 100}
 
 class AppComponent extends React.Component {
   constructor(props) {
@@ -48,28 +50,41 @@ class AppComponent extends React.Component {
       .then((values) => {
         this.mic = values[0]
         this.audioSource = values[1]
-        this.mixer = mixer(ctx, mixerConfig, this.mic.node, this.audioSource.node)
+        this.mixer = mixer(ctx, mixerConfig, this.audioSource.node, this.mic.node)
 
         this.mixer.node.connect(ctx.destination)
         this.setState({loading: false})
       })
   }
-  togglePlaying() {
+  togglePlaying(startTime = 0) {
     if (this.state.playing) {
       this.audioSource.stop()
       this.setState({playing: false})
       return
     }
 
-    this.audioSource.play()
+    this.audioSource.play(startTime)
     this.setState({playing: true})
   }
   handleMixChange(value) {
    this.setState({mix: value})
    this.mixer.updateMix(value)
   }
+  startRecording = () => {
+    this.audioSource.play()
+    this.setState({playing: false})
+    this.mic.startRecording()
+    this.setState({recording: true})
+  }
+  toggleRecord() {
+    this.state.recording ? this.stopRecording()
+      : this.startRecording()
+  }
   stopRecording = () => {
     this.setState({recording: false})
+    this.audioSource.stop()
+    this.setState({playing: false})
+
     this.mic.stopRecording((data) => {
       const view = new DataView(data.buffer);
       var blob = new Blob([view], {type: data.type});
@@ -103,12 +118,14 @@ class AppComponent extends React.Component {
     this.setState({uploading: true})
     const take = this.state.takes[id]
 
-    saveWav(take.blob, take.filename, console.log)
+    saveWav(take.blob, take.filename, (progress) => { this.setState({uploadProgress: {value: progress.loaded, total: progress.total}})})
       .then(() => {
+        const stemLocation = `https://vocalappstems.s3.amazonaws.com/vocalappstems/${take.filename}`
+
         const snackBarOptions = {
-          message: "Success",
-          action: "File location",
-          onActionTouchTap: this.handleSavingComplete
+          message: `Success`,
+          action: "Copy URL to clipboard",
+          onActionTouchTap: () => copyTextToClipboard(stemLocation)
         }
         this.setState({
           uploading: false,
@@ -120,14 +137,6 @@ class AppComponent extends React.Component {
         console.error(err)
         this.setState({uploading: false})
       })
-  }
-  startRecording = () => {
-    this.mic.startRecording()
-    this.setState({recording: true})
-  }
-  toggleRecord() {
-    this.state.recording ? this.stopRecording()
-      : this.startRecording()
   }
   handleRequestClose = () => {
     this.setState({
@@ -171,14 +180,6 @@ class AppComponent extends React.Component {
       )
     }
 
-    const playButton = (
-      <RaisedButton
-        onTouchTap={this.togglePlaying}
-        label={audioSourceButtonText}
-        primary={true}
-      />
-    )
-
     if (this.state.route === "manage_takes") {
       component = (
         <ViewRecording
@@ -187,6 +188,8 @@ class AppComponent extends React.Component {
           selectTake={this.selectTake}
           saveFile={this.saveFileToS3}
           uploading={this.state.uploading}
+          togglePlaying={this.togglePlaying}
+          uploadProgress={this.state.uploadProgress}
           backLink={() => this.setState({route: "index"})}
         />
       )
@@ -195,7 +198,7 @@ class AppComponent extends React.Component {
         <div>
           <Mic toggleRecord={this.toggleRecord}/>
           <div style={{padding: "0 1rem"}}>
-            <h3 className="title">Microphone / Track Volume Mix</h3>
+            <h3 className="title">Microphone monitoring volume, use with headphones</h3>
             <Slider
               min={0}
               max={100}
@@ -216,13 +219,11 @@ class AppComponent extends React.Component {
           route={this.state.route}
         />
         {component}
-        <BottomNav
-          actionButton={playButton}
-        />
+        <BottomNav/>
         <Snackbar
           open={this.state.snackBarOpen}
           message=""
-          autoHideDuration={5000}
+          autoHideDuration={10000}
           {...this.state.snackBarOptions}
           onRequestClose={this.handleRequestClose}
         />
