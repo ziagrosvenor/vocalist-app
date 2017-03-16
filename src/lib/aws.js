@@ -1,7 +1,5 @@
 import AWS from 'aws-sdk'
 
-console.log(ACCESS_KEY_ID, SECRET_ACCESS_KEY)
-
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
   secretAccessKey: SECRET_ACCESS_KEY,
