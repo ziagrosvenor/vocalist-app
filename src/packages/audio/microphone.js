@@ -1,8 +1,9 @@
 import UserMediaRecorder from '../lib/user-media-recorder/src/user_media_recorder'
+import {getUserMedia} from "../user-media"
 const worker = new Worker('/assets/webworkers/wav_worker.js')
 
 export const microphone = (ctx) => {
-  return navigator.mediaDevices.getUserMedia({audio: true})
+  return getUserMedia({audio: true})
     .then((stream) => {
       const source = ctx.createMediaStreamSource(stream)
       const sourceGain = ctx.createGain()
