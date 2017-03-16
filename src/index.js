@@ -1,6 +1,7 @@
 import 'core-js/fn/object/assign';
 import React from 'react';
 import ReactDOM from 'react-dom';
+require("react-tap-event-plugin")()
 import App from './components/Main';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import {
