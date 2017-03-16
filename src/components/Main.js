@@ -46,6 +46,12 @@ class AppComponent extends React.Component {
     }
   }
   componentDidMount() {
+    this.setState({
+      snackBarOpen: true,
+      snackBarOptions: {
+        message: "This app works in Chrome browser on desktop and some Android devices"
+      }
+    })
     Promise.all([microphone(ctx), audioSource(ctx, config)])
       .then((values) => {
         this.mic = values[0]
@@ -72,7 +78,7 @@ class AppComponent extends React.Component {
   }
   startRecording = () => {
     this.audioSource.play()
-    this.setState({playing: false})
+    this.setState({playing: false, snackBarOpen: false})
     this.mic.startRecording()
     this.setState({recording: true})
   }
@@ -86,14 +92,24 @@ class AppComponent extends React.Component {
     this.setState({playing: false})
 
     this.mic.stopRecording((data) => {
+      let snackBarOptions
+
+      if (data.acceptableVolume) {
+        snackBarOptions = {
+          message: "Success",
+          action: "Manage take",
+          onActionTouchTap: this.handleRecordingComplete
+        }
+      } else {
+        snackBarOptions = {
+          message: "Please sing louder or move closer to the microphone",
+        }
+        this.setState({snackBarOptions, snackBarOpen: true})
+        return
+      }
+
       const view = new DataView(data.buffer);
       var blob = new Blob([view], {type: data.type});
-
-      const snackBarOptions = {
-        message: "Success",
-        action: "View recording",
-        onActionTouchTap: this.handleRecordingComplete
-      }
 
       const newTake = {
         blob: blob,
@@ -120,7 +136,7 @@ class AppComponent extends React.Component {
 
     saveWav(take.blob, take.filename, (progress) => { this.setState({uploadProgress: {value: progress.loaded, total: progress.total}})})
       .then(() => {
-        const stemLocation = `https://vocalappstems.s3.amazonaws.com/vocalappstems/${take.filename}`
+        const stemLocation = `https://vocalappstems.s3.amazonaws.com/${take.filename}`
 
         const snackBarOptions = {
           message: `Success`,
@@ -158,8 +174,6 @@ class AppComponent extends React.Component {
     });
   };
   render() {
-    const audioSourceButtonText = this.state.playing ? 'Stop' : 'Loop'
-
     let component
 
     if (this.state.loading) {
@@ -176,6 +190,13 @@ class AppComponent extends React.Component {
           <h2
             style={{width: "100%", textAlign: "center", marginTop: "2rem"}}
             className="title">Loading ...</h2>
+          <Snackbar
+            open={this.state.snackBarOpen}
+            message=""
+            autoHideDuration={8000}
+            {...this.state.snackBarOptions}
+            onRequestClose={this.handleRequestClose}
+          />
         </div>
       )
     }
