@@ -69,6 +69,7 @@
     "binaryjs": "^0.2.1",
     "body-parser": "^1.17.1",
     "core-js": "^2.0.0",
+    "dotenv": "^4.0.0",
     "lame": "^1.2.4",
     "material-ui": "^0.17.1",
     "normalize.css": "^4.0.0",

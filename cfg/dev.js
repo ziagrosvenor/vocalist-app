@@ -11,7 +11,7 @@ let CopyWebpackPlugin = require('copy-webpack-plugin');
 
 let config = Object.assign({}, baseConfig, {
   entry: [
-    'webpack-dev-server/client?http://127.0.0.1:' + defaultSettings.port,
+    'webpack-dev-server/client?https://127.0.0.1:' + defaultSettings.port,
     'webpack/hot/only-dev-server',
     './src/index'
   ],
@@ -23,6 +23,11 @@ let config = Object.assign({}, baseConfig, {
         {from: 'src/instrumentals', to: 'instrumentals', force: true}
     ]),
     new webpack.NoErrorsPlugin(),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': '"dev"',
+      ACCESS_KEY_ID: `"${process.env.ACCESS_KEY_ID}"`,
+      SECRET_ACCESS_KEY: `"${process.env.SECRET_ACCESS_KEY}"`
+    }),
     new BowerWebpackPlugin({
       searchResolveModulesDirectories: false
     })
