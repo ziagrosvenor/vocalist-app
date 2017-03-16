@@ -15,7 +15,7 @@ export const microphone = (ctx) => {
       const sourceGain = ctx.createGain()
       const output = ctx.createGain()
       source.connect(sourceGain)
-      const recorder = UserMediaRecorder(stream, worker, ctx, sourceGain, config);
+      let recorder = UserMediaRecorder(stream, worker, ctx, sourceGain, config);
 
       sourceGain.connect(output)
       recorder.output.gain.value = 0
@@ -26,6 +26,10 @@ export const microphone = (ctx) => {
         startRecording() { recorder.startRecording() },
         stopRecording(callback) {
           recorder.stopRecording(callback)
+          recorder.dispose()
+          recorder = UserMediaRecorder(stream, worker, ctx, sourceGain, config);
+          recorder.output.gain.value = 0
+          recorder.output.connect(output)
         }
       }
     })

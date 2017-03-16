@@ -20,6 +20,11 @@ function UserMediaRecording(uuid, stream, audioContext, input, worker, config) {
   this.worker.addEventListener("message", this._handleWorkerMessage.bind(this));
 }
 
+UserMediaRecording.prototype.dispose = function() {
+  this.input.disconnect(this.scriptProcessor)
+  this.scriptProcessor.disconnect(this.output)
+}
+
 UserMediaRecording.prototype.startRecording = function() {
   if (this.recording) {
     throw new Error("Already recording");
@@ -27,11 +32,11 @@ UserMediaRecording.prototype.startRecording = function() {
 
   this.recording = true;
 
-  var scriptProcessor = this.audioContext.createScriptProcessor(this.config.bufferSize, this.config.channels, this.config.channels);
-  this.input.connect(scriptProcessor);
-  scriptProcessor.connect(this.output);
+  this.scriptProcessor = this.audioContext.createScriptProcessor(this.config.bufferSize, this.config.channels, this.config.channels);
+  this.input.connect(this.scriptProcessor);
+  this.scriptProcessor.connect(this.output);
 
-  scriptProcessor.addEventListener("audioprocess", this._onAudioProcess);
+  this.scriptProcessor.addEventListener("audioprocess", this._onAudioProcess);
 
   this.worker.postMessage({
     command: "init",
