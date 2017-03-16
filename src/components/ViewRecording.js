@@ -1,10 +1,7 @@
 import React from 'react';
 import "./MediaPlayer.scss"
 import PlayPause from './PlayPause'
-import MuteUnmute from './MuteUnmute'
 import Wavesurfer from 'react-wavesurfer';
-import { Media, Player, controls, utils } from 'react-media-player'
-const { CurrentTime, Progress, SeekBar, Duration, Volume, Fullscreen } = controls
 import RaisedButton from 'material-ui/RaisedButton';
 
 let canvas
@@ -21,9 +18,6 @@ class Playlist extends React.Component {
     const { takes, currentTake } = this.props
     return (
       <aside className="media-playlist">
-        <header className="media-playlist-header">
-          <h3 className="media-playlist-title">Playlist</h3>
-        </header>
         <ul className="media-playlist-tracks">
           {takes.map((track, i) =>
             <li
@@ -70,6 +64,22 @@ export class ViewRecording extends React.Component {
 
   render() {
     const {selectedTake, selectTake, takes} = this.props
+
+    if (!takes.length) {
+      return (
+        <div style={{padding: "1rem"}}>
+          <h2 style={{marginBottom: "2rem"}} className="title">You need to record a take first</h2>
+          <RaisedButton
+            label="Record a take here"
+            primary={true}
+            style={buttonStyle}
+            onTouchTap={this.props.backLink}
+          />
+        </div>
+      )
+
+    }
+
     const {url, filename} = takes[selectedTake]
 
     return (
