@@ -62,11 +62,15 @@ class AppComponent extends React.Component {
         this.setState({loading: false})
       })
   }
-  togglePlaying(startTime = 0) {
+  stopBackingTrack = () => {
     if (this.state.playing) {
       this.audioSource.stop()
       this.setState({playing: false})
-      return
+    }
+  }
+  togglePlaying(startTime = 0) {
+    if (this.state.playing) {
+      return this.stopBackingTrack()
     }
 
     this.audioSource.play(startTime)
@@ -78,7 +82,7 @@ class AppComponent extends React.Component {
   }
   startRecording = () => {
     this.audioSource.play()
-    this.setState({playing: false, snackBarOpen: false})
+    this.setState({playing: true, snackBarOpen: false})
     this.mic.startRecording()
     this.setState({recording: true})
   }
@@ -87,9 +91,8 @@ class AppComponent extends React.Component {
       : this.startRecording()
   }
   stopRecording = () => {
-    this.setState({recording: false})
+    this.setState({recording: false, playing: false})
     this.audioSource.stop()
-    this.setState({playing: false})
 
     this.mic.stopRecording((data) => {
       let snackBarOptions
@@ -166,6 +169,7 @@ class AppComponent extends React.Component {
     });
   };
   transitionTo = (route) => {
+    this.stopBackingTrack()
     this.setState({route});
   };
   handleSavingComplete = () => {
@@ -210,6 +214,7 @@ class AppComponent extends React.Component {
           saveFile={this.saveFileToS3}
           uploading={this.state.uploading}
           togglePlaying={this.togglePlaying}
+          stopBackingTrack={this.stopBackingTrack}
           uploadProgress={this.state.uploadProgress}
           backLink={() => this.setState({route: "index"})}
         />

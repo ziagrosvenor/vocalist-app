@@ -8,7 +8,6 @@ import DropDownMenu from 'material-ui/DropDownMenu';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 
 export class BottomNav extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {

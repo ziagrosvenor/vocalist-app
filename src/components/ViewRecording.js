@@ -34,8 +34,6 @@ class Playlist extends React.Component {
   }
 }
 
-
-
 export class ViewRecording extends React.Component {
   constructor(props) {
     super(props)
@@ -48,19 +46,28 @@ export class ViewRecording extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    this.props.stopBackingTrack()
+    this.stopTakeAudio()
+  }
+
   handleSave = () => {
     this.setState({hasSaved: true})
     this.props.saveFile(this.props.selectedTake)
+  }
+  stopTakeAudio = () => {
+    if (this.takeAudio) {
+      this.takeAudio.pause()
+      this.takeAudio.currentTime = 0
+    }
   }
   toggleTakeAudio = () => {
     if (!this.state.isPreviewing)
       return this.takeAudio.play()
 
-    this.takeAudio.pause()
-    this.takeAudio.currentTime = 0
+    this.stopTakeAudio()
   }
   togglePreviewing = () => {
-
     this.setState({
       isPreviewing: !this.state.isPreviewing,
       pos: 0
@@ -155,7 +162,9 @@ export class ViewRecording extends React.Component {
             label="Record another take"
             primary={true}
             style={buttonStyle}
-            onTouchTap={this.props.backLink}
+            onTouchTap={() => {
+              this.props.backLink()
+            }}
           />
           {uploadingProgress}
         </div>
