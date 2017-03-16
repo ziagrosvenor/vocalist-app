@@ -96,11 +96,10 @@ UserMediaRecording.prototype._handleWorkerMessage = function(evt) {
     break;
   case "end":
     var view;
+    data.type = this.type
     try {
-      view = new DataView(data.buffer);
-      var blob = new Blob([view], {type: this.type});
       try {
-        this.endRecordingCallback(blob);
+        this.endRecordingCallback(data);
       } catch(e) {
         // don't call back twice
         throw e;

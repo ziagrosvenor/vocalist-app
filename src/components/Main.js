@@ -5,13 +5,16 @@ import React from 'react';
 import {microphone} from '../audio/microphone'
 import {audioSource} from '../audio/audio-source'
 import {mixer} from '../audio/mixer'
-require("react-tap-event-plugin")()
+
+import {saveWav} from "../lib/aws"
 
 import RaisedButton from 'material-ui/RaisedButton';
+import Snackbar from 'material-ui/Snackbar';
 import Slider from 'material-ui/Slider';
 import {Mic} from "./Microphone.js"
 import {NavBar} from "./NavBar.js"
 import {BottomNav} from "./BottomNav"
+import {ViewRecording} from "./ViewRecording"
 
 let ctx
 
@@ -19,7 +22,7 @@ const config = {
   url: '/assets/instrumentals/hendrix.mp3'
 }
 
-const mixerConfig = {value: 50, max: 100}
+const mixerConfig = {value: 100, max: 100}
 
 class AppComponent extends React.Component {
   constructor(props) {
@@ -32,7 +35,11 @@ class AppComponent extends React.Component {
       loading: true,
       recording: false,
       playing: false,
-      mix: mixerConfig.value
+      uploading: false,
+      snackBarOpen: false,
+      mix: mixerConfig.value,
+      takes: [],
+      selectedTake: 0
     }
   }
   componentDidMount() {
@@ -60,17 +67,83 @@ class AppComponent extends React.Component {
    this.setState({mix: value})
    this.mixer.updateMix(value)
   }
-  toggleRecord() {
-    if (this.state.recording) {
-      this.setState({recording: false})
-      return this.mic.stopRecording()
-    }
+  stopRecording = () => {
+    this.setState({recording: false})
+    this.mic.stopRecording((data) => {
+      const view = new DataView(data.buffer);
+      var blob = new Blob([view], {type: data.type});
 
+      const snackBarOptions = {
+        message: "Success",
+        action: "View recording",
+        onActionTouchTap: this.handleRecordingComplete
+      }
+
+      const newTake = {
+        blob: blob,
+        buffer: data.buffer,
+        url: URL.createObjectURL(blob),
+        filename: "my-take" + Date.now() + ".wav"
+      }
+
+      this.setState({
+        takes: this.state.takes.concat([newTake]),
+        snackBarOpen: true,
+        snackBarOptions
+      })
+
+    })
+  }
+  selectTake = (id) => {
+    this.setState({selectedTake: id})
+  }
+
+  saveFileToS3 = (id) => {
+    this.setState({uploading: true})
+
+    saveWav(this.state.takes[id].blob, console.log)
+      .then(() => {
+        const snackBarOptions = {
+          message: "Success",
+          action: "File location",
+          onActionTouchTap: this.handleSavingComplete
+        }
+        this.setState({
+          uploading: false,
+          snackBarOptions,
+          snackBarOpen: true
+        })
+      })
+      .catch((err) => {
+        console.error(err)
+        this.setState({uploading: false})
+      })
+  }
+  startRecording = () => {
     this.mic.startRecording()
     this.setState({recording: true})
   }
+  toggleRecord() {
+    this.state.recording ? this.stopRecording()
+      : this.startRecording()
+  }
+  handleRequestClose = () => {
+    this.setState({
+      snackBarOpen: false,
+    });
+  };
+  handleRecordingComplete = () => {
+    this.setState({
+      route: "view_recording",
+      snackBarOpen: false,
+    });
+  };
+  handleSavingComplete = () => {
+    this.setState({
+      snackBarOpen: false,
+    });
+  };
   render() {
-    const buttonText = this.state.recording ? 'Stop recording' : 'Record'
     const audioSourceButtonText = this.state.playing ? 'Stop' : 'Loop'
 
     let component
@@ -89,26 +162,50 @@ class AppComponent extends React.Component {
       />
     )
 
-    component = (
+    if (this.state.route === "view_recording") {
+      component = (
+        <ViewRecording
+          takes={this.state.takes}
+          selectedTake={this.state.selectedTake}
+          selectTake={this.selectTake}
+          saveFile={this.saveFileToS3}
+          uploading={this.state.uploading}
+          backLink={() => this.setState({route: "index"})}
+        />
+      )
+    } else {
+      component = (
+        <div>
+          <Mic toggleRecord={this.toggleRecord}/>
+          <div style={{padding: "0 1rem"}}>
+            <h3 className="title">Microphone / Track Volume Mix</h3>
+            <Slider
+              min={0}
+              max={100}
+              value={this.state.mix}
+              onChange={(e, v) => this.handleMixChange(v)}
+              sliderStyle={{padding: "2rem 0"}}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
       <div className='wrapper'>
         <NavBar/>
-        <Mic toggleRecord={this.toggleRecord}/>
+        {component}
         <BottomNav
           actionButton={playButton}
         />
-        <div style={{padding: "0 1rem"}}>
-          <h3 className="title">Microphone / Track Volume Mix</h3>
-          <Slider
-            min={0}
-            max={100}
-            value={this.state.mix}
-            onChange={(e, v) => this.handleMixChange(v)}
-          />
-        </div>
+        <Snackbar
+          open={this.state.snackBarOpen}
+          autoHideDuration={5000}
+          {...this.state.snackBarOptions}
+          onRequestClose={this.handleRequestClose}
+        />
       </div>
-    );
-
-    return component
+    )
   }
 }
 
