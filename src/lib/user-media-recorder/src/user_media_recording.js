@@ -9,8 +9,8 @@ function UserMediaRecording(uuid, stream, audioContext, input, worker, config) {
   this.audioContext = audioContext;
   this.worker = worker;
   this.config = assign({
-    mono: false,
-    bufferSize: 4096,
+    mono: true,
+    bufferSize: 16384,
   }, config || {});
   this.config.channels = this.config.mono ? 1 : 2;
   this.endRecordingCallback = function() {};
@@ -23,6 +23,7 @@ function UserMediaRecording(uuid, stream, audioContext, input, worker, config) {
 UserMediaRecording.prototype.dispose = function() {
   this.input.disconnect(this.scriptProcessor)
   this.scriptProcessor.disconnect(this.output)
+  this.scriptProcessor = null
 }
 
 UserMediaRecording.prototype.startRecording = function() {
@@ -80,8 +81,7 @@ UserMediaRecording.prototype._getAudioData = function(inputBuffer) {
   var channelLeft, channelRight;
   if (this.stream.ended) return [];
   channelLeft = new Float32Array(inputBuffer.getChannelData(0))
-  channelRight = new Float32Array(inputBuffer.getChannelData(1))
-  return [channelLeft, channelRight]
+  return [channelLeft]
 };
 
 UserMediaRecording.prototype._handleWorkerMessage = function(evt) {

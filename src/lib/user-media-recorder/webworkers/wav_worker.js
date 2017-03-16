@@ -69,19 +69,12 @@ this.addEventListener("message", function(evt) {
       var job = jobs[uuid];
       if (!job) return
       job.buffersL.push(new Float32Array(data.buffer[0]));
-      job.buffersR.push(new Float32Array(data.buffer[1]));
       job.length += data.buffer[0].length;
-      job.length += data.buffer[1].length;
 
-      var bufferL = mergeBuffers(job.buffersL, job.length);
-      var bufferR = mergeBuffers(job.buffersR, job.length);
-      var pcmBuffer = interleave(bufferL, bufferR);
       break;
     case "end":
       var job = jobs[uuid];
-      var bufferL = mergeBuffers(job.buffersL, job.length);
-      var bufferR = mergeBuffers(job.buffersR, job.length);
-      var pcmBuffer = interleave(bufferL, bufferR);
+      var pcmBuffer = mergeBuffers(job.buffersL, job.length);
 
       var wavBuffer = new ArrayBuffer(44 + pcmBuffer.length * 2);
       var view = new DataView(wavBuffer);
