@@ -13,6 +13,7 @@ import {Spinner} from '../packages/components/spinner'
 import {ManageTakes} from './pages/manage-takes'
 import {MicrophoneBooth} from './pages/microphone-booth'
 
+import {getContext} from '../packages/audio/audio-context'
 import {microphone} from '../packages/audio/microphone'
 import {audioSource} from '../packages/audio/audio-source'
 import {mixer} from '../packages/audio/mixer'
@@ -20,7 +21,7 @@ import {saveWav} from '../packages/lib/aws'
 
 import {copyTextToClipboard} from '../packages/lib/copy-to-clipboard'
 
-let ctx
+const ctx = getContext()
 
 const config = {
   url: '/assets/instrumentals/backing.ogg'
@@ -40,12 +41,6 @@ const mixerConfig = {value: 0, max: 100}
 class AppComponent extends React.Component {
   constructor(props) {
     super(props)
-
-    try {
-      ctx = new AudioContext({latencyHint: 0.01})
-    } catch (e) {
-      ctx = new AudioContext()
-    }
 
     this.togglePlaying = this.togglePlaying.bind(this)
     this.handleMixChange = this.handleMixChange.bind(this)
