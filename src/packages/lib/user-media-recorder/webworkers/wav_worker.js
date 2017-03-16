@@ -77,12 +77,16 @@ this.addEventListener("message", function(evt) {
       var pcmBuffer = mergeBuffers(job.buffersL, job.length);
 
 
-      var acceptableVolume = false
+      var gainLevel = "LOW_GAIN"
 
       for (var i = 0; i < pcmBuffer.length; i++) {
         var absValue = Math.abs(pcmBuffer[i]);
-        if (absValue >= 0.5) {
-          acceptableVolume = true
+        if (absValue >= 0.3) {
+          gainLevel = "MID_GAIN"
+        }
+        if (absValue >= 1) {
+          gainLevel = "PEAKED_GAIN"
+          break;
         }
       }
 
@@ -122,7 +126,7 @@ this.addEventListener("message", function(evt) {
         command: "end",
         uuid: uuid,
         buffer: wavBuffer,
-        acceptableVolume: acceptableVolume
+        gainLevel: gainLevel
       });
       delete jobs[uuid];
       break;
