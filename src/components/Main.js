@@ -1,5 +1,5 @@
 require('normalize.css/normalize.css');
-require('styles/App.css');
+require('styles/App.scss');
 
 import React from 'react';
 import {microphone} from '../audio/microphone'
@@ -9,6 +9,7 @@ import {mixer} from '../audio/mixer'
 import {saveWav} from "../lib/aws"
 
 import RaisedButton from 'material-ui/RaisedButton';
+import CircularProgress from 'material-ui/CircularProgress';
 import Snackbar from 'material-ui/Snackbar';
 import Slider from 'material-ui/Slider';
 import {Mic} from "./Microphone.js"
@@ -27,7 +28,7 @@ const mixerConfig = {value: 100, max: 100}
 class AppComponent extends React.Component {
   constructor(props) {
     super(props)
-    ctx = new AudioContext()
+    ctx = new AudioContext({latencyHint: 0.01})
     this.toggleRecord = this.toggleRecord.bind(this)
     this.togglePlaying = this.togglePlaying.bind(this)
     this.handleMixChange = this.handleMixChange.bind(this)
@@ -100,8 +101,9 @@ class AppComponent extends React.Component {
 
   saveFileToS3 = (id) => {
     this.setState({uploading: true})
+    const take = this.state.takes[id]
 
-    saveWav(this.state.takes[id].blob, console.log)
+    saveWav(take.blob, take.filename, console.log)
       .then(() => {
         const snackBarOptions = {
           message: "Success",
@@ -134,9 +136,12 @@ class AppComponent extends React.Component {
   };
   handleRecordingComplete = () => {
     this.setState({
-      route: "view_recording",
+      route: "manage_takes",
       snackBarOpen: false,
     });
+  };
+  transitionTo = (route) => {
+    this.setState({route});
   };
   handleSavingComplete = () => {
     this.setState({
@@ -149,8 +154,20 @@ class AppComponent extends React.Component {
     let component
 
     if (this.state.loading) {
-      component = (
-        <div>Loading...</div>
+      return (
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          height: "100vh",
+          width: "100vw"
+        }}>
+          <CircularProgress size={80} thickness={5} />
+          <h2
+            style={{width: "100%", textAlign: "center", marginTop: "2rem"}}
+            className="title">Loading ...</h2>
+        </div>
       )
     }
 
@@ -162,7 +179,7 @@ class AppComponent extends React.Component {
       />
     )
 
-    if (this.state.route === "view_recording") {
+    if (this.state.route === "manage_takes") {
       component = (
         <ViewRecording
           takes={this.state.takes}
@@ -191,15 +208,20 @@ class AppComponent extends React.Component {
       );
     }
 
+
     return (
       <div className='wrapper'>
-        <NavBar/>
+        <NavBar
+          transitionTo={this.transitionTo}
+          route={this.state.route}
+        />
         {component}
         <BottomNav
           actionButton={playButton}
         />
         <Snackbar
           open={this.state.snackBarOpen}
+          message=""
           autoHideDuration={5000}
           {...this.state.snackBarOptions}
           onRequestClose={this.handleRequestClose}
