@@ -30,7 +30,7 @@ export class Mic extends React.Component {
     this.setState({vw, vh, bw, bh})
   }
   handleClose() {
-    this.props.toggleRecord()
+    this.props.stopRecording()
     this.setState({
       cloneStyle: {},
       micStyle: {},
@@ -43,7 +43,7 @@ export class Mic extends React.Component {
       this.setState({active: true})
   }
   handleOpen() {
-    this.props.toggleRecord()
+    this.props.startRecording()
     const {vh, vw, bw, bh} = this.state
     let s
 

@@ -31,7 +31,6 @@ class AppComponent extends React.Component {
   constructor(props) {
     super(props)
     ctx = new AudioContext({latencyHint: 0.01})
-    this.toggleRecord = this.toggleRecord.bind(this)
     this.togglePlaying = this.togglePlaying.bind(this)
     this.handleMixChange = this.handleMixChange.bind(this)
     this.state = {
@@ -63,36 +62,34 @@ class AppComponent extends React.Component {
       })
   }
   stopBackingTrack = () => {
-    if (this.state.playing) {
+    if (this.audioSource.source && this.audioSource.stop) {
       this.audioSource.stop()
-      this.setState({playing: false})
     }
   }
   togglePlaying(startTime = 0) {
-    if (this.state.playing) {
+    if (this.audioSource.source && this.audioSource.stop) {
       return this.stopBackingTrack()
     }
 
     this.audioSource.play(startTime)
-    this.setState({playing: true})
   }
   handleMixChange(value) {
    this.setState({mix: value})
    this.mixer.updateMix(value)
   }
   startRecording = () => {
-    this.audioSource.play()
-    this.setState({playing: true, snackBarOpen: false})
+    this.audioSource.play(0)
+    this.setState({snackBarOpen: false})
     this.mic.startRecording()
     this.setState({recording: true})
   }
-  toggleRecord() {
-    this.state.recording ? this.stopRecording()
-      : this.startRecording()
-  }
   stopRecording = () => {
-    this.setState({recording: false, playing: false})
-    this.audioSource.stop()
+    if (!this.state.recording) {
+      return
+    }
+
+    this.stopBackingTrack()
+    this.setState({recording: false})
 
     this.mic.stopRecording((data) => {
       let snackBarOptions
@@ -170,6 +167,7 @@ class AppComponent extends React.Component {
   };
   transitionTo = (route) => {
     this.stopBackingTrack()
+    this.stopRecording()
     this.setState({route});
   };
   handleSavingComplete = () => {
@@ -222,7 +220,10 @@ class AppComponent extends React.Component {
     } else {
       component = (
         <div>
-          <Mic toggleRecord={this.toggleRecord}/>
+          <Mic
+            stopRecording={this.stopRecording}
+            startRecording={this.startRecording}
+          />
           <div style={{padding: "0 1rem"}}>
             <h3 className="title">Microphone monitoring volume, use with headphones</h3>
             <Slider
