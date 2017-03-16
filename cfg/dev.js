@@ -20,7 +20,8 @@ let config = Object.assign({}, baseConfig, {
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new CopyWebpackPlugin([
-        {from: 'src/instrumentals', to: 'instrumentals', force: true}
+        {from: 'src/instrumentals', to: 'instrumentals', force: true},
+        {from: 'src/lib/user-media-recorder/webworkers', to: 'webworkers', force: true}
     ]),
     new webpack.NoErrorsPlugin(),
     new webpack.DefinePlugin({
