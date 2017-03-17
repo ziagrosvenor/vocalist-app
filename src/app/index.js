@@ -7,7 +7,6 @@ import Snackbar from 'material-ui/Snackbar';
 import { themeProvider } from '../packages/theme/theme-provider'
 
 import {NavBar} from '../packages/components/nav/NavBar'
-import {BottomNav} from '../packages/components/nav/BottomNav'
 import {Spinner} from '../packages/components/spinner'
 
 import {ManageTakes} from './pages/manage-takes'
@@ -47,7 +46,6 @@ class AppComponent extends React.Component {
     this.state = {
       loading: true,
       recording: false,
-      playing: false,
       uploading: false,
       snackBarOpen: false,
       microphoneMix: mixerConfig.value,
@@ -159,7 +157,6 @@ class AppComponent extends React.Component {
         })
       })
       .catch((err) => {
-        console.error(err)
         this.setState({uploading: false})
       })
   }
@@ -227,7 +224,6 @@ class AppComponent extends React.Component {
           route={this.state.route}
         />
         {component}
-        <BottomNav/>
         <Snackbar
           open={this.state.snackBarOpen}
           message=""
