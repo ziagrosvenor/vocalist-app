@@ -1,6 +1,7 @@
 import React from 'react';
 import PlayPause from './PlayPause'
 import "./MediaPlayer.scss"
+import {Waveform} from "./waveform"
 
 class Playlist extends React.Component {
   render() {
@@ -36,7 +37,6 @@ export class AudioPlaylist extends React.Component {
   }
 
   stopTrack = () => {
-    console.log(this.takeAudio)
     if (this.takeAudio) {
       this.takeAudio.pause()
       this.takeAudio.currentTime = 0
@@ -59,6 +59,11 @@ export class AudioPlaylist extends React.Component {
 
     return (
       <div style={{padding: "1rem"}}>
+        <Waveform
+          url={url}
+          height={100}
+          color="rgba(255,255,255, 1)"
+        />
         <audio
           ref={(takeAudio) => this.takeAudio = takeAudio}
           src={url}
