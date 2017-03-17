@@ -1,10 +1,12 @@
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
+let ctx
+
 export function getContext() {
-  let ctx
+  if ( ctx ) return ctx
 
   // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/AudioContext#Parameters
-  // This throws an error in some browsers
+  // latencyHint causes an error in Safari
   try {
     ctx = new AudioContext({latencyHint: 0.01})
   } catch (e) {
