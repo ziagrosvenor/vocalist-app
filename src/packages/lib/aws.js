@@ -10,12 +10,17 @@ var s3 = new AWS.S3();
 
 export function saveWav(blob, filename, onProgress) {
   const config = {
-    bucket: "vocalappstems"
+    bucket: 'vocalappstems'
   }
 
   const file = new File([blob], filename)
 
-  var params = { Key: filename , ContentType: file.type, Body: file, Bucket: config.bucket};
+  var params = {
+    Key: filename,
+    ContentType: file.type,
+    Body: file,
+    Bucket: config.bucket
+  };
 
   return new Promise((resolve, reject) => {
     s3.putObject(params, function(err, data) {

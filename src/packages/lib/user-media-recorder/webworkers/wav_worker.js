@@ -63,29 +63,29 @@ this.addEventListener("message", function(evt) {
       };
       jobs[uuid] = job;
 
-      this.postMessage({command: "init", uuid: uuid, type: "audio/wav"});
+      this.postMessage({command: 'init', uuid: uuid, type: 'audio/wav'});
       break;
-    case "encode":
+    case 'encode':
       var job = jobs[uuid];
       if (!job) return
       job.buffersL.push(new Float32Array(data.buffer[0]));
       job.length += data.buffer[0].length;
 
       break;
-    case "end":
+    case 'end':
       var job = jobs[uuid];
       var pcmBuffer = mergeBuffers(job.buffersL, job.length);
 
 
-      var gainLevel = "LOW_GAIN"
+      var gainLevel = 'LOW_GAIN'
 
       for (var i = 0; i < pcmBuffer.length; i++) {
         var absValue = Math.abs(pcmBuffer[i]);
         if (absValue >= 0.3) {
-          gainLevel = "MID_GAIN"
+          gainLevel = 'MID_GAIN'
         }
         if (absValue >= 1) {
-          gainLevel = "PEAKED_GAIN"
+          gainLevel = 'PEAKED_GAIN'
           break;
         }
       }
@@ -116,7 +116,7 @@ this.addEventListener("message", function(evt) {
       // PCM samples
       var lng = pcmBuffer.length;
       var index = 44;
-      volume = 1;
+      var volume = 1;
       for (var i = 0; i < lng; i++) {
         view.setInt16(index, pcmBuffer[i] * (0x7FFF * volume), true);
         index += 2;

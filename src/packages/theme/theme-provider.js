@@ -7,7 +7,6 @@ import {
 } from 'material-ui/styles/colors';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
-
 const theme = getMuiTheme({
   fontFamily: 'Roboto, sans-serif',
   palette: {
